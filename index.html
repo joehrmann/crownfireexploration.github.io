@@ -68,6 +68,15 @@
     <label class="layer-toggle" id="label-hillshade">
         <input type="checkbox" id="toggle-hillshade" checked> Hillshade Layer
     </label>
+
+    <hr style="border: 0; border-top: 1px solid #ccc; margin: 10px 0;">
+    
+    <h3>Leaf Area Density (LAD)</h3>
+    <label class="layer-toggle">
+        <input type="checkbox" id="toggle-lad" checked> LAD < 3m
+    </label>
+   
+
 </div>
 
 <script>
@@ -160,6 +169,67 @@
             paint: { 'raster-opacity': 0.9 }
         });
 
+        map.addSource('lad-data', {
+            type: 'geojson',
+            data: './data/lad.geojson'
+        });
+
+        map.addLayer({
+            id: 'layer-lad',
+            type: 'fill-extrusion',
+            source: 'lad-data',
+            paint: {
+            'fill-extrusion-color': [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'VALUE'], // The field we are evaluating
+                    
+                    // If VALUE is 0 -> Transparent (Alpha 0)
+                    0, 'rgba(44, 162, 95, 0)',   
+                    
+                    // If VALUE is 1.5 -> Nice visible green (Alpha 0.6)
+                    1, 'rgba(44, 162, 95, 0.6)', 
+                    
+                    // If VALUE is 3.0 -> Almost black (Alpha 0.95)
+                    2, 'rgba(15, 15, 15, 0.95)'  
+                ],
+            'fill-extrusion-opacity': 0.6,
+            'fill-extrusion-height': [
+                '*',
+                ['get', 'VALUE'], // Grabs the exact double value from QGIS
+                25 // Multiply by your desired visual scale
+            ],
+            'fill-extrusion-base': 0,
+            'fill-extrusion-vertical-gradient': false
+        }
+        });
+
+        map.addLayer({
+            id: 'layer-lad-2d',
+            type: 'circle',
+            source: 'lad-data',
+            layout: {
+                // Hide it initially since the map starts in 3D
+                'visibility': 'none' 
+            },
+            paint: {
+                // 1. Map the Size (Radius) to the LAD value
+                'circle-radius': [
+                    'interpolate', ['linear'], ['get', 'VALUE'],
+                    0, 0,   // LAD 0 = 0 pixel radius (invisible)
+                    3, 3   // LAD 3 = 10 pixel radius (adjust this if you want bigger/smaller dots)
+                ],
+                
+                // 2. Keep the exact same color mapping you used for the 3D columns!
+                'circle-color': 
+                    '#000000',
+                
+                // Prevent the circles from having harsh edges
+                'circle-blur': 0.2
+            }
+        });
+
+
         // --- ADD GEOJSON BOUNDARY ---
         map.addSource('boundary-data', {
             type: 'geojson',
@@ -175,7 +245,7 @@
             },
             paint: {
                 'line-color': '#ff0000',
-                'line-width': 5
+                'line-width': 10
             }
         });
     });
@@ -246,6 +316,11 @@ let lastPitch = 60;
         if (is3D) {
             // --- TURN ON SEQUENCE ---
             // Reveal the hillshade menu toggle immediately
+            if (document.getElementById('toggle-lad').checked) {
+                if (map.getLayer('layer-lad-2d')) map.setLayoutProperty('layer-lad-2d', 'visibility', 'none');
+                if (map.getLayer('layer-lad')) map.setLayoutProperty('layer-lad', 'visibility', 'visible');
+            }
+
             if (hillshadeLabel) hillshadeLabel.style.display = 'block';
 
             if (map.getLayer('layer-hillshade')) {
@@ -262,6 +337,10 @@ let lastPitch = 60;
             // Hide the hillshade menu toggle immediately 
             if (hillshadeLabel) hillshadeLabel.style.display = 'none';
 
+            if (document.getElementById('toggle-lad').checked) {
+                if (map.getLayer('layer-lad')) map.setLayoutProperty('layer-lad', 'visibility', 'none');
+                if (map.getLayer('layer-lad-2d')) map.setLayoutProperty('layer-lad-2d', 'visibility', 'visible');
+            }
             lastPitch = map.getPitch() > 5 ? map.getPitch() : 60;
             
             map.easeTo({ pitch: 0, duration: 1000 });
@@ -279,6 +358,26 @@ let lastPitch = 60;
     });
 
 
+// 1. Checkbox Toggle
+    document.getElementById('toggle-lad').addEventListener('change', (e) => {
+        const isLadVisible = e.target.checked;
+        const is3DMode = document.getElementById('toggle-3d').checked; // Check 3D state
+        
+        if (isLadVisible) {
+            // Turn on the correct layer based on the 3D toggle
+            if (map.getLayer('layer-lad')) {
+                map.setLayoutProperty('layer-lad', 'visibility', is3DMode ? 'visible' : 'none');
+            }
+            if (map.getLayer('layer-lad-2d')) {
+                map.setLayoutProperty('layer-lad-2d', 'visibility', is3DMode ? 'none' : 'visible');
+            }
+        } else {
+            // Turn both off
+            if (map.getLayer('layer-lad')) map.setLayoutProperty('layer-lad', 'visibility', 'none');
+            if (map.getLayer('layer-lad-2d')) map.setLayoutProperty('layer-lad-2d', 'visibility', 'none');
+        }
+    });
+   
 </script>
 </body>
 </html>
