@@ -387,10 +387,10 @@ let lastPitch = 60;
         if (is3D) {
             // --- TURN ON SEQUENCE ---
             // Reveal the hillshade menu toggle immediately
-            if (document.getElementById('toggle-lad').checked) {
-                if (map.getLayer('layer-lad-2d')) map.setLayoutProperty('layer-lad-2d', 'visibility', 'none');
-                if (map.getLayer('layer-lad')) map.setLayoutProperty('layer-lad', 'visibility', 'visible');
-            }
+           // if (document.getElementById('toggle-lad').checked) {
+             //   if (map.getLayer('layer-lad-2d')) map.setLayoutProperty('layer-lad-2d', 'visibility', 'none');
+             //   if (map.getLayer('layer-lad')) map.setLayoutProperty('layer-lad', 'visibility', 'visible');
+          //  }
 
             if (hillshadeLabel) hillshadeLabel.style.display = 'block';
 
@@ -408,9 +408,9 @@ let lastPitch = 60;
             // Hide the hillshade menu toggle immediately 
             if (hillshadeLabel) hillshadeLabel.style.display = 'none';
 
-            if (document.getElementById('toggle-lad').checked) {
-                if (map.getLayer('layer-lad')) map.setLayoutProperty('layer-lad', 'visibility', 'none');
-                if (map.getLayer('layer-lad-2d')) map.setLayoutProperty('layer-lad-2d', 'visibility', 'visible');
+            //if (document.getElementById('toggle-lad').checked) {
+             //   if (map.getLayer('layer-lad')) map.setLayoutProperty('layer-lad', 'visibility', 'none');
+           //     if (map.getLayer('layer-lad-2d')) map.setLayoutProperty('layer-lad-2d', 'visibility', 'visible');
             }
             lastPitch = map.getPitch() > 5 ? map.getPitch() : 60;
             
